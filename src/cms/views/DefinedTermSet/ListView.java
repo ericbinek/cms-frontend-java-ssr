@@ -13,6 +13,7 @@ public final class ListView {
 
     public static final String ENTITY = "DefinedTermSet";
     public static final String BASE = "/defined-term-sets";
+    public static final int DEFAULT_LIMIT = 20;
     public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
     public static final List<String> EXTRA_COLS = List.of("url");
 
@@ -28,9 +29,9 @@ public final class ListView {
     public static Map<String, Object> render(Map<String, Object> opts) {
         String url = (String) opts.getOrDefault("url", BASE);
         Map<String, Object> query = new LinkedHashMap<>();
-        String q = URI.create(url).getRawQuery();
-        if (q != null) {
-            for (String pair : q.split("&")) {
+        String rawQuery = URI.create(url).getRawQuery();
+        if (rawQuery != null) {
+            for (String pair : rawQuery.split("&")) {
                 int eq = pair.indexOf('=');
                 if (eq < 0) continue;
                 String k = pair.substring(0, eq);
@@ -91,6 +92,22 @@ public final class ListView {
             rows.append("<tr><td colspan=\"").append(cols).append("\"><em>No items.</em></td></tr>");
         }
 
+        int limit = paginationValue(query.get("limit"), DEFAULT_LIMIT, 1);
+        int offset = paginationValue(query.get("offset"), 0, 0);
+        long count = total != null ? total.longValue() : 0;
+        StringBuilder pagination = new StringBuilder();
+        if (offset > 0) {
+            String href = Layout.escapeHtml(pageHref(rawQuery, Math.max(0, offset - limit)));
+            pagination.append("<a href=\"").append(href).append("\" rel=\"prev\">Previous</a>");
+        }
+        if (offset + limit < count) {
+            String href = Layout.escapeHtml(pageHref(rawQuery, offset + limit));
+            pagination.append("<a href=\"").append(href).append("\" rel=\"next\">Next</a>");
+        }
+        String paginationHtml = pagination.length() > 0
+            ? "\n<nav aria-label=\"Pagination\">" + pagination + "</nav>"
+            : "";
+
         String bodyHtml =
             "<p><a href=\"" + BASE + "/new\">New " + Layout.escapeHtml(ENTITY) + "</a></p>\n" +
             "<p>Showing " + items.size() + " of " + total + ".</p>\n" +
@@ -98,7 +115,7 @@ public final class ListView {
             "<caption>" + Layout.escapeHtml(ENTITY) + " list</caption>\n" +
             "<thead><tr>" + headers + "</tr></thead>\n" +
             "<tbody>" + rows + "</tbody>\n" +
-            "</table>";
+            "</table>" + paginationHtml;
         Map<String, Object> layoutOpts = new LinkedHashMap<>();
         layoutOpts.put("title", ENTITY + "s");
         layoutOpts.put("currentEntity", ENTITY);
@@ -107,5 +124,39 @@ public final class ListView {
         out.put("status", 200);
         out.put("html", Layout.layout(layoutOpts));
         return out;
+    }
+
+    // Parse a decoded query value into a non-negative page number, falling back
+    // to the default when it is missing or not a usable integer.
+    private static int paginationValue(Object raw, int fallback, int min) {
+        if (!(raw instanceof String)) return fallback;
+        try {
+            int n = Integer.parseInt(((String) raw).trim());
+            return n < min ? fallback : n;
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    // Rebuild the list URL for a new offset, preserving every other query
+    // parameter (limit, sort, order, filters) verbatim from the raw query so
+    // pagination keeps the current view intact.
+    private static String pageHref(String rawQuery, int nextOffset) {
+        StringBuilder sb = new StringBuilder(BASE).append('?');
+        boolean first = true;
+        if (rawQuery != null) {
+            for (String pair : rawQuery.split("&")) {
+                if (pair.isEmpty()) continue;
+                int eq = pair.indexOf('=');
+                String k = eq < 0 ? pair : pair.substring(0, eq);
+                if (k.equals("offset")) continue;
+                if (!first) sb.append('&');
+                sb.append(pair);
+                first = false;
+            }
+        }
+        if (!first) sb.append('&');
+        sb.append("offset=").append(nextOffset);
+        return sb.toString();
     }
 }

@@ -195,6 +195,21 @@ public final class Helpers {
         return id;
     }
 
+    // Seed one fresh entity with chosen field overrides, bypassing the seed cache.
+    // Used to plant a hostile field value (e.g. a "javascript:" URL) and check how
+    // the frontend renders it back.
+    @SuppressWarnings("unchecked")
+    public static String seedWith(String entity, Map<String, Object> overrides) {
+        Map<String, Object> payload = resolveRefs(sampleFor(entity));
+        payload.putAll(overrides);
+        Response r = httpRequest("POST", apiBase + "/" + pluralOf(entity),
+            Json.stringify(payload),
+            Map.of("Content-Type", "application/json"));
+        if (r.status != 201) throw new RuntimeException("seedWith(" + entity + ") failed: " + r.status + " " + r.body);
+        Map<String, Object> body = (Map<String, Object>) Json.parse(r.body);
+        return (String) body.get("id");
+    }
+
     private static String encodeOne(Object v) {
         if (v == null) return "";
         if (v instanceof Map) {

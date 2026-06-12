@@ -1,5 +1,6 @@
 package cms.test;
 
+import java.util.Map;
 import java.util.regex.Pattern;
 
 public final class CommentFrontendTest {
@@ -95,6 +96,22 @@ public final class CommentFrontendTest {
             Helpers.ensureEntity(ENTITY);
             Helpers.Response r = Helpers.frontendGet(BASE);
             Assert.match(Pattern.compile("aria-current=\"page\""), r.body, "aria-current");
+        });
+
+        ctx.test("list view paginates with previous and next navigation", () -> {
+            Helpers.seedWith(ENTITY, Map.of());
+            Helpers.seedWith(ENTITY, Map.of());
+            Helpers.seedWith(ENTITY, Map.of());
+
+            Helpers.Response first = Helpers.frontendGet(BASE + "?limit=2&offset=0");
+            Assert.equal(200, first.status);
+            Assert.isTrue(first.body.contains("rel=\"next\""), "first page has a next link");
+            Assert.isTrue(first.body.contains("offset=2"), "next link advances the offset by one page");
+            Assert.isTrue(!first.body.contains("rel=\"prev\""), "first page has no previous link");
+
+            Helpers.Response second = Helpers.frontendGet(BASE + "?limit=2&offset=2");
+            Assert.equal(200, second.status);
+            Assert.isTrue(second.body.contains("rel=\"prev\""), "second page has a previous link");
         });
     }
 }
