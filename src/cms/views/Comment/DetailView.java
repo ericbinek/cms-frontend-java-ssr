@@ -2,6 +2,7 @@ package cms.views.Comment;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,17 +13,17 @@ public final class DetailView {
 
     public static final String ENTITY = "Comment";
     public static final String BASE = "/comments";
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     static {
-        PROPERTIES.add(Map.of("name", "text", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "author", "kind", "Ref", "targets", List.of("Person"), "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "about", "kind", "Ref", "targets", List.of("BlogPosting"), "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "parentItem", "kind", "Ref", "targets", List.of("Comment"), "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateCreated", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateModified", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "upvoteCount", "kind", "InlineScalar", "use", "Integer", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "downvoteCount", "kind", "InlineScalar", "use", "Integer", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "creativeWorkStatus", "kind", "Enum", "values", List.of("Pending", "Approved", "Spam", "Trash"), "cardinality", "one", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("text", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("author", List.of("Person"), PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("about", List.of("BlogPosting"), PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("parentItem", List.of("Comment"), PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateCreated", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateModified", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("upvoteCount", "Integer", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("downvoteCount", "Integer", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Enumerated("creativeWorkStatus", List.of("Pending", "Approved", "Spam", "Trash"), PropertySpec.Cardinality.ONE, false));
     }
 
     private DetailView() {}
@@ -39,9 +40,9 @@ public final class DetailView {
         }
         Map<String, Object> item = (Map<String, Object>) r.body;
         StringBuilder rows = new StringBuilder();
-        for (Map<String, Object> p : PROPERTIES) {
-            rows.append("<dt>").append(Layout.escapeHtml(p.get("name"))).append("</dt>")
-                .append("<dd>").append(Layout.formatValue(item.get(p.get("name")), p)).append("</dd>");
+        for (PropertySpec p : PROPERTIES) {
+            rows.append("<dt>").append(Layout.escapeHtml(p.name())).append("</dt>")
+                .append("<dd>").append(Layout.formatValue(item.get(p.name()), p)).append("</dd>");
         }
         String meta =
             "<dt>id</dt><dd><code>" + Layout.escapeHtml(item.get("id")) + "</code></dd>" +

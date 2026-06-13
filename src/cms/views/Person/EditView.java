@@ -2,6 +2,7 @@ package cms.views.Person;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,18 +13,18 @@ public final class EditView {
 
     public static final String ENTITY = "Person";
     public static final String BASE = "/persons";
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     static {
-        PROPERTIES.add(Map.of("name", "name", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "givenName", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "familyName", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "alternateName", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "email", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "url", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "description", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "image", "kind", "Ref", "targets", List.of("ImageObject"), "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "jobTitle", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "sameAs", "kind", "InlineScalar", "use", "URL", "cardinality", "many", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("name", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("givenName", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("familyName", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("alternateName", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("email", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Ref("image", List.of("ImageObject"), PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("jobTitle", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("sameAs", "URL", PropertySpec.Cardinality.MANY, false));
     }
 
     private EditView() {}
@@ -31,10 +32,10 @@ public final class EditView {
     @SuppressWarnings("unchecked")
     private static Map<String, List<Map<String, String>>> loadRefOptions() {
         Map<String, List<Map<String, String>>> out = new LinkedHashMap<>();
-        for (Map<String, Object> prop : PROPERTIES) {
-            if (!"Ref".equals(prop.get("kind"))) continue;
+        for (PropertySpec prop : PROPERTIES) {
+            if (!(prop instanceof PropertySpec.Ref ref)) continue;
             List<Map<String, String>> collected = new ArrayList<>();
-            for (String target : (List<String>) prop.get("targets")) {
+            for (String target : ref.targets()) {
                 ApiClient.Response r = ApiClient.list(target, Map.of("limit", 100));
                 if (r.status == 200 && r.body instanceof Map) {
                     Object items = ((Map<?, ?>) r.body).get("items");
@@ -49,7 +50,7 @@ public final class EditView {
                     }
                 }
             }
-            out.put((String) prop.get("name"), collected);
+            out.put(ref.name(), collected);
         }
         return out;
     }
@@ -88,8 +89,8 @@ public final class EditView {
         }
         Map<String, List<Map<String, String>>> refOptions = loadRefOptions();
         StringBuilder fields = new StringBuilder();
-        for (Map<String, Object> p : PROPERTIES) {
-            fields.append(Layout.renderField(p, values.get(p.get("name")), refOptions, fieldErrors.getOrDefault(p.get("name"), List.of()))).append("\n");
+        for (PropertySpec p : PROPERTIES) {
+            fields.append(Layout.renderField(p, values.get(p.name()), refOptions, fieldErrors.getOrDefault(p.name(), List.of()))).append("\n");
         }
         StringBuilder errorBlock = new StringBuilder();
         if (!errors.isEmpty()) {

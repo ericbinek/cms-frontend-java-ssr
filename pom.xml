@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>cms</groupId>
     <artifactId>cms-frontend-java-ssr</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
     <packaging>jar</packaging>
     <name>cms-frontend-java-ssr</name>
     <description>Server-rendered schema.org-aligned CMS frontend on Java — no runtime dependencies.</description>

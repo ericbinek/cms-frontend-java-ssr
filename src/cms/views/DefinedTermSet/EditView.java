@@ -2,6 +2,7 @@ package cms.views.DefinedTermSet;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,11 +13,11 @@ public final class EditView {
 
     public static final String ENTITY = "DefinedTermSet";
     public static final String BASE = "/defined-term-sets";
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     static {
-        PROPERTIES.add(Map.of("name", "name", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "description", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "url", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("name", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, false));
     }
 
     private EditView() {}
@@ -57,8 +58,8 @@ public final class EditView {
         }
         Map<String, List<Map<String, String>>> refOptions = loadRefOptions();
         StringBuilder fields = new StringBuilder();
-        for (Map<String, Object> p : PROPERTIES) {
-            fields.append(Layout.renderField(p, values.get(p.get("name")), refOptions, fieldErrors.getOrDefault(p.get("name"), List.of()))).append("\n");
+        for (PropertySpec p : PROPERTIES) {
+            fields.append(Layout.renderField(p, values.get(p.name()), refOptions, fieldErrors.getOrDefault(p.name(), List.of()))).append("\n");
         }
         StringBuilder errorBlock = new StringBuilder();
         if (!errors.isEmpty()) {

@@ -2,6 +2,7 @@ package cms.views.ImageObject;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,16 +13,16 @@ public final class CreateView {
 
     public static final String ENTITY = "ImageObject";
     public static final String BASE = "/image-objects";
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     static {
-        PROPERTIES.add(Map.of("name", "name", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "caption", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "description", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "contentUrl", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "encodingFormat", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "uploadDate", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "creator", "kind", "Ref", "targets", List.of("Person"), "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "license", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("name", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("caption", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("contentUrl", "URL", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("encodingFormat", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("uploadDate", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Ref("creator", List.of("Person"), PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("license", "URL", PropertySpec.Cardinality.ONE, false));
     }
 
     private CreateView() {}
@@ -29,10 +30,10 @@ public final class CreateView {
     @SuppressWarnings("unchecked")
     private static Map<String, List<Map<String, String>>> loadRefOptions() {
         Map<String, List<Map<String, String>>> out = new LinkedHashMap<>();
-        for (Map<String, Object> prop : PROPERTIES) {
-            if (!"Ref".equals(prop.get("kind"))) continue;
+        for (PropertySpec prop : PROPERTIES) {
+            if (!(prop instanceof PropertySpec.Ref ref)) continue;
             List<Map<String, String>> collected = new ArrayList<>();
-            for (String target : (List<String>) prop.get("targets")) {
+            for (String target : ref.targets()) {
                 ApiClient.Response r = ApiClient.list(target, Map.of("limit", 100));
                 if (r.status == 200 && r.body instanceof Map) {
                     Object items = ((Map<?, ?>) r.body).get("items");
@@ -47,7 +48,7 @@ public final class CreateView {
                     }
                 }
             }
-            out.put((String) prop.get("name"), collected);
+            out.put(ref.name(), collected);
         }
         return out;
     }
@@ -75,8 +76,8 @@ public final class CreateView {
         Map<String, List<String>> fieldErrors = (Map<String, List<String>>) opts.getOrDefault("fieldErrors", Map.of());
         Map<String, List<Map<String, String>>> refOptions = loadRefOptions();
         StringBuilder fields = new StringBuilder();
-        for (Map<String, Object> p : PROPERTIES) {
-            fields.append(Layout.renderField(p, values.get(p.get("name")), refOptions, fieldErrors.getOrDefault(p.get("name"), List.of()))).append("\n");
+        for (PropertySpec p : PROPERTIES) {
+            fields.append(Layout.renderField(p, values.get(p.name()), refOptions, fieldErrors.getOrDefault(p.name(), List.of()))).append("\n");
         }
         StringBuilder errorBlock = new StringBuilder();
         if (!errors.isEmpty()) {

@@ -2,6 +2,7 @@ package cms.views.CategoryCode;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -14,15 +15,15 @@ public final class ListView {
     public static final String ENTITY = "CategoryCode";
     public static final String BASE = "/category-codes";
     public static final int DEFAULT_LIMIT = 20;
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     public static final List<String> EXTRA_COLS = List.of("url");
 
     static {
-        PROPERTIES.add(Map.of("name", "name", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "description", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "codeValue", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "url", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "inCodeSet", "kind", "Ref", "targets", List.of("CategoryCodeSet"), "cardinality", "one", "required", Boolean.TRUE));
+        PROPERTIES.add(new PropertySpec.Scalar("name", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("codeValue", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Ref("inCodeSet", List.of("CategoryCodeSet"), PropertySpec.Cardinality.ONE, true));
     }
 
     private ListView() {}
@@ -71,14 +72,14 @@ public final class ListView {
         headerList.add("Actions");
         for (String h : headerList) headers.append("<th scope=\"col\">").append(Layout.escapeHtml(h)).append("</th>");
 
-        Map<String, Map<String, Object>> propByName = new LinkedHashMap<>();
-        for (Map<String, Object> p : PROPERTIES) propByName.put((String) p.get("name"), p);
+        Map<String, PropertySpec> propByName = new LinkedHashMap<>();
+        for (PropertySpec p : PROPERTIES) propByName.put(p.name(), p);
 
         StringBuilder rows = new StringBuilder();
         for (Map<String, Object> item : items) {
             StringBuilder extras = new StringBuilder();
             for (String col : EXTRA_COLS) {
-                Map<String, Object> p = propByName.get(col);
+                PropertySpec p = propByName.get(col);
                 extras.append("<td>").append(p != null ? Layout.formatValue(item.get(col), p) : Layout.escapeHtml(item.getOrDefault(col, "").toString())).append("</td>");
             }
             String id = Layout.escapeHtml(item.get("id"));

@@ -2,6 +2,7 @@ package cms.views.BlogPosting;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -14,26 +15,26 @@ public final class ListView {
     public static final String ENTITY = "BlogPosting";
     public static final String BASE = "/blog-postings";
     public static final int DEFAULT_LIMIT = 20;
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     public static final List<String> EXTRA_COLS = List.of("datePublished");
 
     static {
-        PROPERTIES.add(Map.of("name", "headline", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "alternativeHeadline", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "description", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "articleBody", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "author", "kind", "Ref", "targets", List.of("Person"), "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "image", "kind", "Ref", "targets", List.of("ImageObject"), "cardinality", "many", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "keywords", "kind", "Ref", "targets", List.of("DefinedTerm"), "cardinality", "many", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "about", "kind", "Ref", "targets", List.of("CategoryCode"), "cardinality", "many", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "datePublished", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateModified", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateCreated", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "url", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "inLanguage", "kind", "Embed", "use", "Language", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "isAccessibleForFree", "kind", "InlineScalar", "use", "Boolean", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "wordCount", "kind", "InlineScalar", "use", "Integer", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "creativeWorkStatus", "kind", "Enum", "values", List.of("Draft", "Pending", "Published", "Archived"), "cardinality", "one", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("headline", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("alternativeHeadline", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("articleBody", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("author", List.of("Person"), PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("image", List.of("ImageObject"), PropertySpec.Cardinality.MANY, false));
+        PROPERTIES.add(new PropertySpec.Ref("keywords", List.of("DefinedTerm"), PropertySpec.Cardinality.MANY, false));
+        PROPERTIES.add(new PropertySpec.Ref("about", List.of("CategoryCode"), PropertySpec.Cardinality.MANY, false));
+        PROPERTIES.add(new PropertySpec.Scalar("datePublished", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateModified", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateCreated", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Embed("inLanguage", "Language", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("isAccessibleForFree", "Boolean", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("wordCount", "Integer", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Enumerated("creativeWorkStatus", List.of("Draft", "Pending", "Published", "Archived"), PropertySpec.Cardinality.ONE, false));
     }
 
     private ListView() {}
@@ -82,14 +83,14 @@ public final class ListView {
         headerList.add("Actions");
         for (String h : headerList) headers.append("<th scope=\"col\">").append(Layout.escapeHtml(h)).append("</th>");
 
-        Map<String, Map<String, Object>> propByName = new LinkedHashMap<>();
-        for (Map<String, Object> p : PROPERTIES) propByName.put((String) p.get("name"), p);
+        Map<String, PropertySpec> propByName = new LinkedHashMap<>();
+        for (PropertySpec p : PROPERTIES) propByName.put(p.name(), p);
 
         StringBuilder rows = new StringBuilder();
         for (Map<String, Object> item : items) {
             StringBuilder extras = new StringBuilder();
             for (String col : EXTRA_COLS) {
-                Map<String, Object> p = propByName.get(col);
+                PropertySpec p = propByName.get(col);
                 extras.append("<td>").append(p != null ? Layout.formatValue(item.get(col), p) : Layout.escapeHtml(item.getOrDefault(col, "").toString())).append("</td>");
             }
             String id = Layout.escapeHtml(item.get("id"));

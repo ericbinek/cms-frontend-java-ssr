@@ -2,6 +2,7 @@ package cms.views.Comment;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -14,19 +15,19 @@ public final class ListView {
     public static final String ENTITY = "Comment";
     public static final String BASE = "/comments";
     public static final int DEFAULT_LIMIT = 20;
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     public static final List<String> EXTRA_COLS = List.of("upvoteCount");
 
     static {
-        PROPERTIES.add(Map.of("name", "text", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "author", "kind", "Ref", "targets", List.of("Person"), "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "about", "kind", "Ref", "targets", List.of("BlogPosting"), "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "parentItem", "kind", "Ref", "targets", List.of("Comment"), "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateCreated", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateModified", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "upvoteCount", "kind", "InlineScalar", "use", "Integer", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "downvoteCount", "kind", "InlineScalar", "use", "Integer", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "creativeWorkStatus", "kind", "Enum", "values", List.of("Pending", "Approved", "Spam", "Trash"), "cardinality", "one", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("text", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("author", List.of("Person"), PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("about", List.of("BlogPosting"), PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("parentItem", List.of("Comment"), PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateCreated", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateModified", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("upvoteCount", "Integer", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("downvoteCount", "Integer", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Enumerated("creativeWorkStatus", List.of("Pending", "Approved", "Spam", "Trash"), PropertySpec.Cardinality.ONE, false));
     }
 
     private ListView() {}
@@ -75,14 +76,14 @@ public final class ListView {
         headerList.add("Actions");
         for (String h : headerList) headers.append("<th scope=\"col\">").append(Layout.escapeHtml(h)).append("</th>");
 
-        Map<String, Map<String, Object>> propByName = new LinkedHashMap<>();
-        for (Map<String, Object> p : PROPERTIES) propByName.put((String) p.get("name"), p);
+        Map<String, PropertySpec> propByName = new LinkedHashMap<>();
+        for (PropertySpec p : PROPERTIES) propByName.put(p.name(), p);
 
         StringBuilder rows = new StringBuilder();
         for (Map<String, Object> item : items) {
             StringBuilder extras = new StringBuilder();
             for (String col : EXTRA_COLS) {
-                Map<String, Object> p = propByName.get(col);
+                PropertySpec p = propByName.get(col);
                 extras.append("<td>").append(p != null ? Layout.formatValue(item.get(col), p) : Layout.escapeHtml(item.getOrDefault(col, "").toString())).append("</td>");
             }
             String id = Layout.escapeHtml(item.get("id"));

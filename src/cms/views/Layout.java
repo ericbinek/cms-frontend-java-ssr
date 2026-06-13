@@ -145,43 +145,40 @@ public final class Layout {
         return escapeHtml(value);
     }
 
-    @SuppressWarnings("unchecked")
-    public static String formatValue(Object value, Map<String, Object> prop) {
+    public static String formatValue(Object value, PropertySpec prop) {
         if (value == null || "".equals(value)) return "<em>—</em>";
-        if (value instanceof List) {
-            List<?> list = (List<?>) value;
+        if (value instanceof List<?> list) {
             if (list.isEmpty()) return "<em>—</em>";
-            Map<String, Object> single = new LinkedHashMap<>(prop);
-            single.put("cardinality", "one");
             StringBuilder sb = new StringBuilder("<ul>");
-            for (Object v : list) sb.append("<li>").append(formatValue(v, single)).append("</li>");
+            for (Object v : list) sb.append("<li>").append(formatValue(v, prop)).append("</li>");
             sb.append("</ul>");
             return sb.toString();
         }
-        String kind = (String) prop.get("kind");
-        if ("Ref".equals(kind)) {
-            List<String> targets = (List<String>) prop.get("targets");
-            String target = targets.get(0);
-            String plural = PLURALS.getOrDefault(target, target.toLowerCase() + "s");
-            return "<a href=\"/" + plural + "/" + escapeHtml(value) + "\">" + escapeHtml(target) + ": " + escapeHtml(value) + "</a>";
-        }
-        if ("Embed".equals(kind)) {
-            if ("Language".equals(prop.get("use")) && value instanceof Map) {
-                Map<String, Object> m = (Map<String, Object>) value;
-                Object code = m.getOrDefault("alternateName", m.getOrDefault("name", ""));
-                return "<span lang=\"" + escapeHtml(code) + "\">" + escapeHtml(code) + "</span>";
+        return switch (prop) {
+            case PropertySpec.Ref ref -> {
+                String target = ref.targets().get(0);
+                String plural = PLURALS.getOrDefault(target, target.toLowerCase() + "s");
+                yield "<a href=\"/" + plural + "/" + escapeHtml(value) + "\">" + escapeHtml(target) + ": " + escapeHtml(value) + "</a>";
             }
-            return "<code>" + escapeHtml(Json.stringify(value)) + "</code>";
-        }
-        if ("Enum".equals(kind)) return escapeHtml(value);
-        return formatScalar(value, (String) prop.get("use"));
+            case PropertySpec.Embed em -> {
+                if ("Language".equals(em.use()) && value instanceof Map<?, ?> m) {
+                    Object code = m.get("alternateName");
+                    if (code == null) code = m.get("name");
+                    if (code == null) code = "";
+                    yield "<span lang=\"" + escapeHtml(code) + "\">" + escapeHtml(code) + "</span>";
+                }
+                yield "<code>" + escapeHtml(Json.stringify(value)) + "</code>";
+            }
+            case PropertySpec.Enumerated e -> escapeHtml(value);
+            case PropertySpec.Scalar s -> formatScalar(value, s.use());
+        };
     }
 
-    public static String renderField(Map<String, Object> prop, Object value, Map<String, List<Map<String, String>>> refOptions, List<String> errors) {
+    public static String renderField(PropertySpec prop, Object value, Map<String, List<Map<String, String>>> refOptions, List<String> errors) {
         if (refOptions == null) refOptions = Map.of();
         if (errors == null) errors = List.of();
-        String name = (String) prop.get("name");
-        boolean required = Boolean.TRUE.equals(prop.get("required"));
+        String name = prop.name();
+        boolean required = prop.required();
         String fieldId = "field-" + name;
         String requiredAttr = required ? " required" : "";
         String requiredMark = required ? " <span aria-hidden=\"true\">*</span>" : "";
@@ -200,53 +197,57 @@ public final class Layout {
         return "<p>\n<label for=\"" + fieldId + "\">" + labelText + "</label><br>\n" + input + "\n" + help + "\n</p>";
     }
 
-    @SuppressWarnings("unchecked")
-    private static String renderInput(Map<String, Object> prop, Object value, String fieldId, String requiredAttr, String ariaInvalid, Map<String, List<Map<String, String>>> refOptions) {
-        String name = escapeHtml(prop.get("name"));
-        String kind = (String) prop.get("kind");
-        boolean required = Boolean.TRUE.equals(prop.get("required"));
-        String cardinality = (String) prop.get("cardinality");
+    private static String useOf(PropertySpec prop) {
+        if (prop instanceof PropertySpec.Scalar s) return s.use();
+        if (prop instanceof PropertySpec.Embed em) return em.use();
+        return null;
+    }
 
-        if ("Enum".equals(kind)) {
-            List<String> values = (List<String>) prop.get("values");
+    @SuppressWarnings("unchecked")
+    private static String renderInput(PropertySpec prop, Object value, String fieldId, String requiredAttr, String ariaInvalid, Map<String, List<Map<String, String>>> refOptions) {
+        String name = escapeHtml(prop.name());
+        boolean required = prop.required();
+        boolean many = prop.cardinality() == PropertySpec.Cardinality.MANY;
+
+        if (prop instanceof PropertySpec.Enumerated en) {
             StringBuilder opts = new StringBuilder();
-            for (String v : values) {
+            for (String v : en.values()) {
                 String sel = v.equals(value) ? " selected" : "";
                 opts.append("<option value=\"").append(escapeHtml(v)).append("\"").append(sel).append(">").append(escapeHtml(v)).append("</option>");
             }
             String placeholder = required ? "" : "<option value=\"\">—</option>";
             return "<select id=\"" + fieldId + "\" name=\"" + name + "\"" + requiredAttr + ariaInvalid + ">" + placeholder + opts + "</select>";
         }
-        if ("Ref".equals(kind)) {
+        if (prop instanceof PropertySpec.Ref) {
             List<Object> current;
-            if ("many".equals(cardinality)) {
+            if (many) {
                 current = value instanceof List ? new ArrayList<>((List<Object>) value) : (value == null ? new ArrayList<>() : new ArrayList<>(List.of(value)));
             } else {
                 Object single = value instanceof List ? (((List<?>) value).isEmpty() ? null : ((List<?>) value).get(0)) : value;
                 current = single == null ? new ArrayList<>() : new ArrayList<>(List.of(single));
             }
             StringBuilder opts = new StringBuilder();
-            List<Map<String, String>> options = refOptions.getOrDefault((String) prop.get("name"), List.of());
+            List<Map<String, String>> options = refOptions.getOrDefault(prop.name(), List.of());
             for (Map<String, String> o : options) {
                 boolean sel = current.contains(o.get("value"));
                 opts.append("<option value=\"").append(escapeHtml(o.get("value"))).append("\"")
                     .append(sel ? " selected" : "").append(">").append(escapeHtml(o.get("label"))).append("</option>");
             }
-            String multiple = "many".equals(cardinality) ? " multiple" : "";
-            String placeholder = "one".equals(cardinality) && !required ? "<option value=\"\">—</option>" : "";
+            String multiple = many ? " multiple" : "";
+            String placeholder = !many && !required ? "<option value=\"\">—</option>" : "";
             return "<select id=\"" + fieldId + "\" name=\"" + name + "\"" + multiple + requiredAttr + ariaInvalid + ">" + placeholder + opts + "</select>";
         }
-        if ("Embed".equals(kind) && "Language".equals(prop.get("use"))) {
+        if (prop instanceof PropertySpec.Embed em && "Language".equals(em.use())) {
             Object v;
-            if (value instanceof Map) {
-                Object alt = ((Map<?, ?>) value).get("alternateName");
+            if (value instanceof Map<?, ?> m) {
+                Object alt = m.get("alternateName");
                 v = alt == null ? "" : alt;
             } else {
                 v = value == null ? "" : value;
             }
             return "<input id=\"" + fieldId + "\" name=\"" + name + "\" type=\"text\" value=\"" + escapeHtml(v) + "\"" + requiredAttr + ariaInvalid + ">";
         }
-        if ("many".equals(cardinality)) {
+        if (many) {
             String v;
             if (value instanceof List) {
                 StringBuilder sb = new StringBuilder();
@@ -260,8 +261,8 @@ public final class Layout {
             }
             return "<textarea id=\"" + fieldId + "\" name=\"" + name + "\" rows=\"3\"" + requiredAttr + ariaInvalid + ">" + escapeHtml(v) + "</textarea>";
         }
-        String use = (String) prop.get("use");
-        if ("Text".equals(use) && LONG_TEXT_HINT.contains(prop.get("name"))) {
+        String use = useOf(prop);
+        if ("Text".equals(use) && LONG_TEXT_HINT.contains(prop.name())) {
             return "<textarea id=\"" + fieldId + "\" name=\"" + name + "\" rows=\"6\"" + requiredAttr + ariaInvalid + ">" + escapeHtml(value) + "</textarea>";
         }
         if ("URL".equals(use)) {
@@ -290,18 +291,16 @@ public final class Layout {
         return "<input id=\"" + fieldId + "\" name=\"" + name + "\" type=\"text\" value=\"" + escapeHtml(value) + "\"" + requiredAttr + ariaInvalid + ">";
     }
 
-    @SuppressWarnings("unchecked")
-    private static Object coerceFormValue(Object raw, Map<String, Object> prop) {
+    private static Object coerceFormValue(Object raw, PropertySpec prop) {
         if (raw == null || "".equals(raw)) return null;
-        String kind = (String) prop.get("kind");
-        if ("Enum".equals(kind) || "Ref".equals(kind)) return raw.toString();
-        if ("Embed".equals(kind) && "Language".equals(prop.get("use"))) {
+        if (prop instanceof PropertySpec.Enumerated || prop instanceof PropertySpec.Ref) return raw.toString();
+        if (prop instanceof PropertySpec.Embed em && "Language".equals(em.use())) {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("@type", "Language");
             m.put("alternateName", raw.toString());
             return m;
         }
-        String use = (String) prop.get("use");
+        String use = useOf(prop);
         if ("Integer".equals(use)) {
             try { return Long.parseLong(raw.toString()); } catch (NumberFormatException e) { return raw; }
         }
@@ -353,18 +352,16 @@ public final class Layout {
     }
 
     @SuppressWarnings("unchecked")
-    public static Map<String, Object> parseFormBody(String raw, List<Map<String, Object>> properties) {
+    public static Map<String, Object> parseFormBody(String raw, List<PropertySpec> properties) {
         Map<String, Object> pairs = parseFormPairs(raw);
         Map<String, Object> out = new LinkedHashMap<>();
-        for (Map<String, Object> prop : properties) {
-            String name = (String) prop.get("name");
-            String cardinality = (String) prop.get("cardinality");
-            String kind = (String) prop.get("kind");
-            String use = (String) prop.get("use");
+        for (PropertySpec prop : properties) {
+            String name = prop.name();
+            boolean many = prop.cardinality() == PropertySpec.Cardinality.MANY;
 
-            if ("many".equals(cardinality)) {
+            if (many) {
                 List<Object> rawValues;
-                if ("Ref".equals(kind)) {
+                if (prop instanceof PropertySpec.Ref) {
                     Object existing = pairs.get(name);
                     if (existing instanceof List) rawValues = new ArrayList<>((List<Object>) existing);
                     else if (existing != null) { rawValues = new ArrayList<>(); rawValues.add(existing); }
@@ -385,7 +382,7 @@ public final class Layout {
                     if (c != null) coerced.add(c);
                 }
                 if (!coerced.isEmpty()) out.put(name, coerced);
-            } else if ("InlineScalar".equals(kind) && "Boolean".equals(use)) {
+            } else if (prop instanceof PropertySpec.Scalar s && "Boolean".equals(s.use())) {
                 out.put(name, pairs.containsKey(name));
             } else {
                 Object rawValue = pairs.get(name);
@@ -396,11 +393,11 @@ public final class Layout {
         return out;
     }
 
-    public static Map<String, Object> formValuesFromItem(Map<String, Object> item, List<Map<String, Object>> properties) {
+    public static Map<String, Object> formValuesFromItem(Map<String, Object> item, List<PropertySpec> properties) {
         Map<String, Object> out = new LinkedHashMap<>();
         if (item == null) return out;
-        for (Map<String, Object> p : properties) {
-            String name = (String) p.get("name");
+        for (PropertySpec p : properties) {
+            String name = p.name();
             if (item.containsKey(name)) out.put(name, item.get(name));
         }
         return out;

@@ -2,6 +2,7 @@ package cms.views.BlogPosting;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,24 +13,24 @@ public final class EditView {
 
     public static final String ENTITY = "BlogPosting";
     public static final String BASE = "/blog-postings";
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     static {
-        PROPERTIES.add(Map.of("name", "headline", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "alternativeHeadline", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "description", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "articleBody", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "author", "kind", "Ref", "targets", List.of("Person"), "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "image", "kind", "Ref", "targets", List.of("ImageObject"), "cardinality", "many", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "keywords", "kind", "Ref", "targets", List.of("DefinedTerm"), "cardinality", "many", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "about", "kind", "Ref", "targets", List.of("CategoryCode"), "cardinality", "many", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "datePublished", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateModified", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "dateCreated", "kind", "InlineScalar", "use", "DateTime", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "url", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "inLanguage", "kind", "Embed", "use", "Language", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "isAccessibleForFree", "kind", "InlineScalar", "use", "Boolean", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "wordCount", "kind", "InlineScalar", "use", "Integer", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "creativeWorkStatus", "kind", "Enum", "values", List.of("Draft", "Pending", "Published", "Archived"), "cardinality", "one", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("headline", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("alternativeHeadline", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("articleBody", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("author", List.of("Person"), PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Ref("image", List.of("ImageObject"), PropertySpec.Cardinality.MANY, false));
+        PROPERTIES.add(new PropertySpec.Ref("keywords", List.of("DefinedTerm"), PropertySpec.Cardinality.MANY, false));
+        PROPERTIES.add(new PropertySpec.Ref("about", List.of("CategoryCode"), PropertySpec.Cardinality.MANY, false));
+        PROPERTIES.add(new PropertySpec.Scalar("datePublished", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateModified", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("dateCreated", "DateTime", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Embed("inLanguage", "Language", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("isAccessibleForFree", "Boolean", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("wordCount", "Integer", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Enumerated("creativeWorkStatus", List.of("Draft", "Pending", "Published", "Archived"), PropertySpec.Cardinality.ONE, false));
     }
 
     private EditView() {}
@@ -37,10 +38,10 @@ public final class EditView {
     @SuppressWarnings("unchecked")
     private static Map<String, List<Map<String, String>>> loadRefOptions() {
         Map<String, List<Map<String, String>>> out = new LinkedHashMap<>();
-        for (Map<String, Object> prop : PROPERTIES) {
-            if (!"Ref".equals(prop.get("kind"))) continue;
+        for (PropertySpec prop : PROPERTIES) {
+            if (!(prop instanceof PropertySpec.Ref ref)) continue;
             List<Map<String, String>> collected = new ArrayList<>();
-            for (String target : (List<String>) prop.get("targets")) {
+            for (String target : ref.targets()) {
                 ApiClient.Response r = ApiClient.list(target, Map.of("limit", 100));
                 if (r.status == 200 && r.body instanceof Map) {
                     Object items = ((Map<?, ?>) r.body).get("items");
@@ -55,7 +56,7 @@ public final class EditView {
                     }
                 }
             }
-            out.put((String) prop.get("name"), collected);
+            out.put(ref.name(), collected);
         }
         return out;
     }
@@ -94,8 +95,8 @@ public final class EditView {
         }
         Map<String, List<Map<String, String>>> refOptions = loadRefOptions();
         StringBuilder fields = new StringBuilder();
-        for (Map<String, Object> p : PROPERTIES) {
-            fields.append(Layout.renderField(p, values.get(p.get("name")), refOptions, fieldErrors.getOrDefault(p.get("name"), List.of()))).append("\n");
+        for (PropertySpec p : PROPERTIES) {
+            fields.append(Layout.renderField(p, values.get(p.name()), refOptions, fieldErrors.getOrDefault(p.name(), List.of()))).append("\n");
         }
         StringBuilder errorBlock = new StringBuilder();
         if (!errors.isEmpty()) {

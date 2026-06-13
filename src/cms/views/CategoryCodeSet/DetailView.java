@@ -2,6 +2,7 @@ package cms.views.CategoryCodeSet;
 
 import cms.ApiClient;
 import cms.views.Layout;
+import cms.views.PropertySpec;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -12,11 +13,11 @@ public final class DetailView {
 
     public static final String ENTITY = "CategoryCodeSet";
     public static final String BASE = "/category-code-sets";
-    public static final List<Map<String, Object>> PROPERTIES = new ArrayList<>();
+    public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
     static {
-        PROPERTIES.add(Map.of("name", "name", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.TRUE));
-        PROPERTIES.add(Map.of("name", "description", "kind", "InlineScalar", "use", "Text", "cardinality", "one", "required", Boolean.FALSE));
-        PROPERTIES.add(Map.of("name", "url", "kind", "InlineScalar", "use", "URL", "cardinality", "one", "required", Boolean.FALSE));
+        PROPERTIES.add(new PropertySpec.Scalar("name", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, false));
     }
 
     private DetailView() {}
@@ -33,9 +34,9 @@ public final class DetailView {
         }
         Map<String, Object> item = (Map<String, Object>) r.body;
         StringBuilder rows = new StringBuilder();
-        for (Map<String, Object> p : PROPERTIES) {
-            rows.append("<dt>").append(Layout.escapeHtml(p.get("name"))).append("</dt>")
-                .append("<dd>").append(Layout.formatValue(item.get(p.get("name")), p)).append("</dd>");
+        for (PropertySpec p : PROPERTIES) {
+            rows.append("<dt>").append(Layout.escapeHtml(p.name())).append("</dt>")
+                .append("<dd>").append(Layout.formatValue(item.get(p.name()), p)).append("</dd>");
         }
         String meta =
             "<dt>id</dt><dd><code>" + Layout.escapeHtml(item.get("id")) + "</code></dd>" +

@@ -2,7 +2,7 @@
 
 The goal is a CMS whose content is structured and schema.org-native, rendered as semantic, predictable HTML over a strict API. The data stays machine-readable by design, which makes the whole system a clean substrate for automation and LLM-driven workflows.
 
-This is a work-in-progress project (v0.2.0). The roadmap is deliberately loose, will grow, and the order can change based on what proves useful. Nothing here is a promise.
+This is a work-in-progress project (v0.2.1). The roadmap is deliberately loose, will grow, and the order can change based on what proves useful. Nothing here is a promise.
 
 ## Recently shipped
 
