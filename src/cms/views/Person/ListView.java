@@ -74,7 +74,6 @@ public final class ListView {
         headerList.add("Name");
         headerList.add("Created");
         headerList.addAll(EXTRA_COLS);
-        headerList.add("Actions");
         for (String h : headerList) headers.append("<th scope=\"col\">").append(Layout.escapeHtml(h)).append("</th>");
 
         Map<String, PropertySpec> propByName = new LinkedHashMap<>();
@@ -92,11 +91,10 @@ public final class ListView {
                 .append("<td><a href=\"").append(BASE).append("/").append(id).append("\">").append(Layout.escapeHtml(Layout.displayName(item, ENTITY))).append("</a></td>\n")
                 .append("<td><time datetime=\"").append(Layout.escapeHtml(item.getOrDefault("dateCreated", ""))).append("\">").append(Layout.escapeHtml(item.getOrDefault("dateCreated", ""))).append("</time></td>\n")
                 .append(extras).append("\n")
-                .append("<td><a href=\"").append(BASE).append("/").append(id).append("/edit\">Edit</a> · <a href=\"").append(BASE).append("/").append(id).append("/delete\">Delete</a></td>\n")
                 .append("</tr>");
         }
         if (rows.length() == 0) {
-            int cols = 3 + EXTRA_COLS.size();
+            int cols = 2 + EXTRA_COLS.size();
             rows.append("<tr><td colspan=\"").append(cols).append("\"><em>No items.</em></td></tr>");
         }
 
@@ -117,7 +115,6 @@ public final class ListView {
             : "";
 
         String bodyHtml =
-            "<p><a href=\"" + BASE + "/new\">New " + Layout.escapeHtml(ENTITY) + "</a></p>\n" +
             "<p>Showing " + items.size() + " of " + total + ".</p>\n" +
             "<table>\n" +
             "<caption>" + Layout.escapeHtml(ENTITY) + " list</caption>\n" +

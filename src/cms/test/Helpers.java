@@ -3,11 +3,9 @@ package cms.test;
 import cms.Json;
 
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -210,46 +208,7 @@ public final class Helpers {
         return (String) body.get("id");
     }
 
-    private static String encodeOne(Object v) {
-        if (v == null) return "";
-        if (v instanceof Map) {
-            Map<?, ?> m = (Map<?, ?>) v;
-            if ("Language".equals(m.get("@type"))) {
-                Object alt = m.get("alternateName");
-                return alt == null ? "" : alt.toString();
-            }
-            return Json.stringify(v);
-        }
-        if (v instanceof Boolean) return ((Boolean) v) ? "true" : "false";
-        return v.toString();
-    }
-
-    public static String formBodyFor(String entity) {
-        Map<String, Object> sample = resolveRefs(sampleFor(entity));
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<String, Object> e : sample.entrySet()) {
-            Object v = e.getValue();
-            if (v instanceof List) {
-                for (Object item : (List<?>) v) appendPair(sb, e.getKey(), encodeOne(item));
-            } else {
-                appendPair(sb, e.getKey(), encodeOne(v));
-            }
-        }
-        return sb.toString();
-    }
-
-    private static void appendPair(StringBuilder sb, String k, String v) {
-        if (sb.length() > 0) sb.append('&');
-        sb.append(URLEncoder.encode(k, StandardCharsets.UTF_8));
-        sb.append('=');
-        sb.append(URLEncoder.encode(v, StandardCharsets.UTF_8));
-    }
-
     public static Response frontendGet(String path) {
         return httpRequest("GET", frontendBase + path, null, Map.of());
-    }
-
-    public static Response frontendPostForm(String path, String body) {
-        return httpRequest("POST", frontendBase + path, body, Map.of("Content-Type", "application/x-www-form-urlencoded"));
     }
 }

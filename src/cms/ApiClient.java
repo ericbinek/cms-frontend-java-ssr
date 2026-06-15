@@ -52,16 +52,12 @@ public final class ApiClient {
         }
     }
 
-    private static Response request(String method, String path, Object body) {
+    private static Response request(String method, String path) {
         try {
             HttpRequest.Builder b = HttpRequest.newBuilder(URI.create(baseUrl() + path))
                 .timeout(Duration.ofSeconds(10))
                 .header("Accept", "application/json");
-            HttpRequest.BodyPublisher publisher = body == null
-                ? HttpRequest.BodyPublishers.noBody()
-                : HttpRequest.BodyPublishers.ofString(Json.stringify(body));
-            if (body != null) b.header("Content-Type", "application/json");
-            b.method(method, publisher);
+            b.method(method, HttpRequest.BodyPublishers.noBody());
             HttpResponse<String> r = CLIENT.send(b.build(), HttpResponse.BodyHandlers.ofString());
             String etag = r.headers().firstValue("etag").orElse(null);
             Object parsed = null;
@@ -90,22 +86,10 @@ public final class ApiClient {
             }
         }
         String path = "/" + pluralOf(entity) + (qs.length() > 0 ? "?" + qs : "");
-        return request("GET", path, null);
+        return request("GET", path);
     }
 
     public static Response get(String entity, String id) {
-        return request("GET", "/" + pluralOf(entity) + "/" + URLEncoder.encode(id, StandardCharsets.UTF_8), null);
-    }
-
-    public static Response create(String entity, Map<String, Object> payload) {
-        return request("POST", "/" + pluralOf(entity), payload);
-    }
-
-    public static Response update(String entity, String id, Map<String, Object> payload) {
-        return request("PUT", "/" + pluralOf(entity) + "/" + URLEncoder.encode(id, StandardCharsets.UTF_8), payload);
-    }
-
-    public static Response remove(String entity, String id) {
-        return request("DELETE", "/" + pluralOf(entity) + "/" + URLEncoder.encode(id, StandardCharsets.UTF_8), null);
+        return request("GET", "/" + pluralOf(entity) + "/" + URLEncoder.encode(id, StandardCharsets.UTF_8));
     }
 }

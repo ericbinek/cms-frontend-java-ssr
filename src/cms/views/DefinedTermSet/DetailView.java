@@ -42,15 +42,10 @@ public final class DetailView {
             "<dt>id</dt><dd><code>" + Layout.escapeHtml(item.get("id")) + "</code></dd>" +
             "<dt>dateCreated</dt><dd><time datetime=\"" + Layout.escapeHtml(item.getOrDefault("dateCreated", "")) + "\">" + Layout.escapeHtml(item.getOrDefault("dateCreated", "")) + "</time></dd>" +
             "<dt>dateModified</dt><dd><time datetime=\"" + Layout.escapeHtml(item.getOrDefault("dateModified", "")) + "\">" + Layout.escapeHtml(item.getOrDefault("dateModified", "")) + "</time></dd>";
-        String idEsc = Layout.escapeHtml(item.get("id"));
         String body =
             "<article>\n" +
             "<dl>" + rows + meta + "</dl>\n" +
-            "<p>\n" +
-            "<a href=\"" + BASE + "/" + idEsc + "/edit\">Edit</a> ·\n" +
-            "<a href=\"" + BASE + "/" + idEsc + "/delete\">Delete</a> ·\n" +
-            "<a href=\"" + BASE + "\">Back to list</a>\n" +
-            "</p>\n" +
+            "<p><a href=\"" + BASE + "\">Back to list</a></p>\n" +
             "</article>";
         Map<String, Object> opts2 = new LinkedHashMap<>();
         opts2.put("title", Layout.displayName(item, ENTITY));
