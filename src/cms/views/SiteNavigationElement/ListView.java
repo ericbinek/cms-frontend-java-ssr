@@ -1,4 +1,4 @@
-package cms.views.BlogPosting;
+package cms.views.SiteNavigationElement;
 
 import cms.ApiClient;
 import cms.views.Layout;
@@ -12,32 +12,18 @@ import java.util.Map;
 
 public final class ListView {
 
-    public static final String ENTITY = "BlogPosting";
-    public static final String BASE = "/blog-postings";
+    public static final String ENTITY = "SiteNavigationElement";
+    public static final String BASE = "/site-navigation-elements";
     public static final int DEFAULT_LIMIT = 20;
     public static final List<PropertySpec> PROPERTIES = new ArrayList<>();
-    public static final List<String> EXTRA_COLS = List.of("datePublished");
+    public static final List<String> EXTRA_COLS = List.of("url");
 
     static {
-        PROPERTIES.add(new PropertySpec.Scalar("headline", "Text", PropertySpec.Cardinality.ONE, true));
-        PROPERTIES.add(new PropertySpec.Scalar("alternativeHeadline", "Text", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("name", "Text", PropertySpec.Cardinality.ONE, true));
+        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, true));
         PROPERTIES.add(new PropertySpec.Scalar("description", "Text", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Scalar("articleBody", "Text", PropertySpec.Cardinality.ONE, true));
-        PROPERTIES.add(new PropertySpec.Ref("author", List.of("Person"), PropertySpec.Cardinality.ONE, true));
-        PROPERTIES.add(new PropertySpec.Ref("publisher", List.of("Organization"), PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Ref("image", List.of("ImageObject"), PropertySpec.Cardinality.MANY, false));
-        PROPERTIES.add(new PropertySpec.Ref("video", List.of("VideoObject"), PropertySpec.Cardinality.MANY, false));
-        PROPERTIES.add(new PropertySpec.Ref("audio", List.of("AudioObject"), PropertySpec.Cardinality.MANY, false));
-        PROPERTIES.add(new PropertySpec.Ref("keywords", List.of("DefinedTerm"), PropertySpec.Cardinality.MANY, false));
-        PROPERTIES.add(new PropertySpec.Ref("about", List.of("CategoryCode"), PropertySpec.Cardinality.MANY, false));
-        PROPERTIES.add(new PropertySpec.Scalar("datePublished", "DateTime", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Scalar("dateModified", "DateTime", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Scalar("dateCreated", "DateTime", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Scalar("url", "URL", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Embed("inLanguage", "Language", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Scalar("isAccessibleForFree", "Boolean", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Scalar("wordCount", "Integer", PropertySpec.Cardinality.ONE, false));
-        PROPERTIES.add(new PropertySpec.Enumerated("creativeWorkStatus", List.of("Draft", "Pending", "Published", "Archived"), PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Scalar("position", "Integer", PropertySpec.Cardinality.ONE, false));
+        PROPERTIES.add(new PropertySpec.Ref("isPartOf", List.of("SiteNavigationElement"), PropertySpec.Cardinality.ONE, false));
     }
 
     private ListView() {}

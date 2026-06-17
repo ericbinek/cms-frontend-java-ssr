@@ -2,7 +2,7 @@
 
 [![Tests](https://github.com/ericbinek/cms-frontend-java-ssr/actions/workflows/test.yml/badge.svg)](https://github.com/ericbinek/cms-frontend-java-ssr/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-![Version](https://img.shields.io/badge/version-0.3.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)
 ![Status](https://img.shields.io/badge/status-work_in_progress-orange.svg)
 ![Build in public](https://img.shields.io/badge/build-in_public-ff69b4.svg)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)
@@ -12,11 +12,11 @@ A server rendered web frontend for a schema.org aligned CMS, written in plain Ja
 
 It runs on the JDK alone: `com.sun.net.httpserver` serves semantic HTML directly, with no template engine and no runtime dependencies.
 
-It renders read-only list and detail views for 10 schema.org entity types such as BlogPosting, Person, and WebPage, reading from the CMS API over HTTP. Content is managed through the separate admin interface.
+It renders read-only list and detail views for 14 schema.org entity types such as BlogPosting, Person, and Organization, reading from the CMS API over HTTP. Content is managed through the separate admin interface.
 
 A conformance test suite defines the markup and behavior.
 
-## Status: work in progress (v0.3.0)
+## Status: work in progress (v0.4.0)
 
 This is an ongoing build-in-public project, shared only for community and communication purposes. Do not deploy it in production. Do not rely on its interfaces or data format remaining stable.
 
@@ -53,14 +53,18 @@ Configure the upstream API via the `API_BASE_URL` environment variable.
 
 - `BlogPosting`
 - `Person`
+- `Organization`
 - `WebPage`
 - `ImageObject`
+- `VideoObject`
+- `AudioObject`
 - `CategoryCode`
 - `CategoryCodeSet`
 - `DefinedTerm`
 - `DefinedTermSet`
 - `Comment`
 - `WebSite`
+- `SiteNavigationElement`
 
 ## Testing
 

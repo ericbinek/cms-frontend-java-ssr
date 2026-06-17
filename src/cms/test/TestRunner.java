@@ -68,14 +68,18 @@ public final class TestRunner {
 
         run("BlogPosting", cms.test.BlogPostingFrontendTest::run, ctx);
         run("Person", cms.test.PersonFrontendTest::run, ctx);
+        run("Organization", cms.test.OrganizationFrontendTest::run, ctx);
         run("WebPage", cms.test.WebPageFrontendTest::run, ctx);
         run("ImageObject", cms.test.ImageObjectFrontendTest::run, ctx);
+        run("VideoObject", cms.test.VideoObjectFrontendTest::run, ctx);
+        run("AudioObject", cms.test.AudioObjectFrontendTest::run, ctx);
         run("CategoryCode", cms.test.CategoryCodeFrontendTest::run, ctx);
         run("CategoryCodeSet", cms.test.CategoryCodeSetFrontendTest::run, ctx);
         run("DefinedTerm", cms.test.DefinedTermFrontendTest::run, ctx);
         run("DefinedTermSet", cms.test.DefinedTermSetFrontendTest::run, ctx);
         run("Comment", cms.test.CommentFrontendTest::run, ctx);
         run("WebSite", cms.test.WebSiteFrontendTest::run, ctx);
+        run("SiteNavigationElement", cms.test.SiteNavigationElementFrontendTest::run, ctx);
 
         int total = PASS.get() + FAIL.get();
         System.out.println();

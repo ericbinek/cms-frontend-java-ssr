@@ -42,14 +42,18 @@ public final class Server {
     static {
         ROUTES.add(new EntityRoute("BlogPosting", "blog-postings", cms.views.BlogPosting.ListView::render, cms.views.BlogPosting.DetailView::render));
         ROUTES.add(new EntityRoute("Person", "persons", cms.views.Person.ListView::render, cms.views.Person.DetailView::render));
+        ROUTES.add(new EntityRoute("Organization", "organizations", cms.views.Organization.ListView::render, cms.views.Organization.DetailView::render));
         ROUTES.add(new EntityRoute("WebPage", "web-pages", cms.views.WebPage.ListView::render, cms.views.WebPage.DetailView::render));
         ROUTES.add(new EntityRoute("ImageObject", "image-objects", cms.views.ImageObject.ListView::render, cms.views.ImageObject.DetailView::render));
+        ROUTES.add(new EntityRoute("VideoObject", "video-objects", cms.views.VideoObject.ListView::render, cms.views.VideoObject.DetailView::render));
+        ROUTES.add(new EntityRoute("AudioObject", "audio-objects", cms.views.AudioObject.ListView::render, cms.views.AudioObject.DetailView::render));
         ROUTES.add(new EntityRoute("CategoryCode", "category-codes", cms.views.CategoryCode.ListView::render, cms.views.CategoryCode.DetailView::render));
         ROUTES.add(new EntityRoute("CategoryCodeSet", "category-code-sets", cms.views.CategoryCodeSet.ListView::render, cms.views.CategoryCodeSet.DetailView::render));
         ROUTES.add(new EntityRoute("DefinedTerm", "defined-terms", cms.views.DefinedTerm.ListView::render, cms.views.DefinedTerm.DetailView::render));
         ROUTES.add(new EntityRoute("DefinedTermSet", "defined-term-sets", cms.views.DefinedTermSet.ListView::render, cms.views.DefinedTermSet.DetailView::render));
         ROUTES.add(new EntityRoute("Comment", "comments", cms.views.Comment.ListView::render, cms.views.Comment.DetailView::render));
         ROUTES.add(new EntityRoute("WebSite", "web-sites", cms.views.WebSite.ListView::render, cms.views.WebSite.DetailView::render));
+        ROUTES.add(new EntityRoute("SiteNavigationElement", "site-navigation-elements", cms.views.SiteNavigationElement.ListView::render, cms.views.SiteNavigationElement.DetailView::render));
     }
 
     public static void main(String[] args) throws Exception {
